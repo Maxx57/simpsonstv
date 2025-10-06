@@ -1,11 +1,25 @@
 import os
 import random
 import time
-from subprocess import PIPE, Popen, STDOUT
+import re
+from subprocess import Popen
 
 directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'videos')
 
 videos = []
+
+
+def extract_season_episode(filename):
+    """Extract season and episode numbers from filename.
+    Returns (season, episode) tuple or (999999, 999999) if not found."""
+    # Match patterns like S01E01, S1E1, s01e01, etc.
+    match = re.search(r'[Ss](\d+)[Ee](\d+)', filename)
+    if match:
+        season = int(match.group(1))
+        episode = int(match.group(2))
+        return (season, episode)
+    # Return high numbers if no match found (so they appear at the end)
+    return (999999, 999999)
 
 
 def getVideos():
@@ -14,6 +28,9 @@ def getVideos():
     for file in os.listdir(directory):
         if file.lower().endswith('.mp4'):
             videos.append(os.path.join(directory, file))
+    
+    # Sort videos by season and episode number
+    videos.sort(key=lambda x: extract_season_episode(os.path.basename(x)))
 
 
 def playVideos():
@@ -22,11 +39,25 @@ def playVideos():
         getVideos()
         time.sleep(5)
         return
-    random.shuffle(videos)
-    for video in videos:
-        playProcess = Popen(['omxplayer', '--no-osd', '--aspect-mode', 'fill', video])
-        playProcess.wait()
+    
+    # Don't shuffle - play in order
+    # random.shuffle(videos)
+    
+    # VLC command with automatic crop detection and stretch
+    vlc_command = [
+        'cvlc',  # Console VLC
+        '--fullscreen',
+        '--no-osd',
+        '--loop',
+        '--no-video-title-show',
+        '--aspect-ratio=16:9',  # Force aspect ratio to match your screen
+        '--crop=16:9',  # Crop to 16:9 (removes black bars)
+        '--autoscale',  # Auto-scale to fill screen
+    ] + videos
+    
+    playProcess = Popen(vlc_command)
+    playProcess.wait()
 
 
-while (True):
-    playVideos()
+while True:
+    playVideos() 

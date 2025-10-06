@@ -1,0 +1,13 @@
+[Unit]
+Description=Simpson TV Player
+After=network.target
+
+[Service]
+WorkingDirectory=/home/admin/simpsonstv/
+User=admin
+ExecStart=/usr/bin/python3 /home/admin/simpsonstv/player.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
