@@ -1,13 +1,27 @@
 [Unit]
 Description=Simpson TV Player
-After=network.target
+After=network.target graphical.target
 
 [Service]
 WorkingDirectory=/home/admin/simpsonstv/
 User=admin
+Group=video
+# Environment variables for display access
+Environment="DISPLAY=:0"
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+Environment="TERM=linux"
+# Allow VLC to access DRM/KMS for direct rendering
+SupplementaryGroups=render video input
+# Give access to devices
+DeviceAllow=/dev/dri/card0 rw
+DeviceAllow=/dev/dri/renderD128 rw
+DeviceAllow=/dev/fb0 rw
 ExecStart=/usr/bin/python3 /home/admin/simpsonstv/player-vlc.py
 Restart=always
 RestartSec=5
+# Standard output to journal for debugging
+StandardOutput=journal
+StandardError=journal
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical.target
