@@ -44,6 +44,7 @@ def playVideos():
     # random.shuffle(videos)
     
     # VLC command with automatic crop detection and stretch
+    # Let VLC auto-detect the best video output, with verbose logging
     vlc_command = [
         'cvlc',  # Console VLC
         '--fullscreen',
@@ -52,9 +53,9 @@ def playVideos():
         '--no-video-title-show',
         '--aspect-ratio=16:9',  # Force aspect ratio to match your screen
         '--crop=16:9',  # Crop to 16:9 (removes black bars)
-        '--autoscale',  # Auto-scale to fill screen
-        '--vout=drm',  # Use DRM/KMS video output for headless operation
-        '--no-audio',  # Disable audio if not needed
+        '--no-audio',  # Disable audio (PulseAudio not available in service)
+        '--no-snapshot-preview',
+        '--verbose=2',  # Add verbose output to see what's happening
         '--extraintf=rc',  # Enable RC interface for remote control
         '--rc-unix=/tmp/vlcsocket',  # Unix socket for touch control
     ] + videos
