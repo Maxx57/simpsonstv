@@ -1,8 +1,41 @@
 # Simpsons TV - Raspberry Pi Zero 2W Build
 
 I made some changes to Brandon Withrow's [Waveshare-version TV build](https://withrow.io/simpsons-tv-build-guide-waveshare). That include the changes (https://github.com/jeremywhelchel/simpsonstv) made to use MPV as the video player and added touch controls. The below gif is his and some of his text changes in the readme. I further added a VLC version of the player, as well as updated the encode.py to remove the black bars on the side of the videos if they are there.
-I also added a rename files, in case you have extra information after the season and episode in the file names.
-In the player.py I also updated the play order to respect the seasons and episodes in case there was some weird ordering based on files named something like `The.Simpsons.S1E1.some.extra.info.mp4` and `The.Simpsons.S12E12.some.extra.info.mp4` in file ordering. Mine rename them all the add a zero (0) for single digit season and episode so this `S1E1` becomes `S01E01` and removes all the extra info to the right of the season and episode, etc.
+
+I also added a rename files script, in case you have extra information after the season and episode in the file names. Because who doesn't love a good filename that looks like `The.Simpsons.S1E1.REMASTERED.ULTIMATE.DIRECTORS.CUT.EXTENDED.EDITION.FINAL.FINAL2.mp4`? Yeah, we're fixing that.
+
+In the player.py I also updated the play order to respect the seasons and episodes in case there was some weird ordering based on files named something like `The.Simpsons.S1E1.some.extra.info.mp4` and `The.Simpsons.S12E12.some.extra.info.mp4` in file ordering. Mine rename them all to add a zero (0) for single digit season and episode so this `S1E1` becomes `S01E01` and removes all the extra info to the right of the season and episode, etc. Because apparently computers can't count like humans. Who knew? 🤷
+
+---
+
+## Table of Contents
+
+- [Simpsons TV - Raspberry Pi Zero 2W Build](#simpsons-tv---raspberry-pi-zero-2w-build)
+  - [Table of Contents](#table-of-contents)
+  - [Hardware Used](#hardware-used)
+  - [**jeremywhelchel Instructions:**](#jeremywhelchel-instructions)
+  - [Touchscreen player control](#touchscreen-player-control)
+  - [Videos](#videos)
+  - [Video Player Options](#video-player-options)
+  - [Hardware changes](#hardware-changes)
+  - [MPV Video player](#mpv-video-player)
+  - [**MY ADDITIONAL CHANGES:**](#my-additional-changes)
+  - [Complete Setup Guide for Raspberry Pi Zero 2W](#complete-setup-guide-for-raspberry-pi-zero-2w)
+    - [Step 1: Flash the SD Card with Raspberry Pi OS](#step-1-flash-the-sd-card-with-raspberry-pi-os)
+    - [Step 2: Configure the Boot Partition](#step-2-configure-the-boot-partition)
+    - [Step 3: First Boot and SSH Connection](#step-3-first-boot-and-ssh-connection)
+    - [Step 4: Initial Raspberry Pi Configuration](#step-4-initial-raspberry-pi-configuration)
+  - [Quick Reference: Required Software Installation](#quick-reference-required-software-installation)
+    - [Step 5: Install Required Software and Python Libraries](#step-5-install-required-software-and-python-libraries)
+    - [Step 6: Transfer Project Files](#step-6-transfer-project-files)
+      - [Option A: Transfer Files using FileZilla (Slower)](#option-a-transfer-files-using-filezilla-slower)
+      - [Option B: Transfer Video Files using USB Drive (Faster)](#option-b-transfer-video-files-using-usb-drive-faster)
+    - [Step 7: Install and Configure Systemd Services](#step-7-install-and-configure-systemd-services)
+    - [Step 8: Service Management Commands](#step-8-service-management-commands)
+    - [Troubleshooting](#troubleshooting)
+  - [Additional Notes](#additional-notes)
+    - [Video Encoding](#video-encoding)
+    - [File Renaming](#file-renaming)
 
 ---
 
@@ -24,6 +57,8 @@ And I got these micro usb to type A converters to connect a keyboard to the Pi a
 ![Unidirectional Micro USB Male to US.png](simpson-tv/Unidirectional%20Micro%20USB%20Male%20to%20US.png)
 
 Wherever you see `admin` in the commands, replace that with your username since that's the user you will be using. By default yours will be `pi`, I highly recommend that you change that and the password during the setup process of the flashing of the SSD - I had trouble connecting to the pi using SSH if I used the raspberry OS imager program using the system tools, so I just did the default flash of the ssd card not using the imager system tools (I chose NO) and then did all the setup on the pi using my keyboard connected directly to the pi and a magnifying glass - ;) so I could see what I was typing on that tiny display.
+
+_Pro tip: If you squint really hard at that 2.8" screen while typing, you'll develop either eagle-eye vision or a splitting headache. Possibly both. That's why we're using SSH for most of this. You're welcome._
 
 ---
 
@@ -126,6 +161,8 @@ well.
 
 The player python script is replaced by a much simpler `start.sh` script.
 
+**NOTE: I am not using the start.sh script in my build, though I left it in there. Look at the eremywhelchel version of his code in the tvplayer.service file. His calls the `start.sh` where as mine calls the player.py file.**
+
 ---
 
 ## **MY ADDITIONAL CHANGES:**
@@ -165,6 +202,8 @@ This guide walks you through the complete process of setting up a Raspberry Pi Z
 **1.5 Wait for the imaging process to complete**
 
 The Raspberry Pi Imager will download the OS (if needed), write it to the SD card, and verify the write. This may take several minutes.
+
+_Perfect time to grab a coffee, practice your Homer Simpson impression ("D'oh!"), or contemplate why you're building a tiny TV when you already have a perfectly good one on the wall. Don't question it. Just embrace the madness._
 
 ### Step 2: Configure the Boot Partition
 
@@ -210,7 +249,6 @@ update_config=1
 network={
     ssid="YOUR_WIFI_SSID"
     psk="YOUR_WIFI_PASSWORD"
-    key_mgmt=WPA-PSK
 }
 ```
 
@@ -220,11 +258,15 @@ Replace `YOUR_WIFI_SSID` with your network name and `YOUR_WIFI_PASSWORD` with yo
 
 Once all files are copied, safely eject the SD card from your computer and insert it into your Raspberry Pi Zero 2W.
 
+_Look at you, being all responsible and safely ejecting things! Your computer thanks you. The SD card... well, it doesn't care, but good job anyway!_
+
 ### Step 3: First Boot and SSH Connection
 
 **3.1 Power on the Raspberry Pi**
 
 Insert the SD card and connect power to your Pi Zero 2W. Wait 1-2 minutes for the first boot to complete.
+
+_This is where you stare at a tiny screen hoping for signs of life. It's like waiting for a text back, except nerdier and with more LEDs blinking._
 
 **3.2 Find the Pi's IP address**
 
@@ -302,9 +344,11 @@ sudo raspi-config
 
 Wait for the Pi to reboot (about 30-60 seconds), then reconnect via SSH.
 
+_Rebooting: a computer's way of saying "have you tried turning it off and on again?" Spoiler alert: it usually works. Unlike your New Year's resolutions._
+
 ## Quick Reference: Required Software Installation
 
-After flashing your SD card and completing initial setup with `raspi-config`, you'll need to install the following packages. **This must be done via SSH or directly on the Pi** (SSH is much easier!). The same step by step process is outlined below this, I just added this section for a full list of libraries needed for quick reference :
+After flashing your SD card and completing initial setup with `raspi-config`, you'll need to install the following packages. **This must be done via SSH or directly on the Pi** (SSH is much easier!). The same step by step process is outlined below this, I just added this section for a full list of libraries needed for quick reference:
 
 ```bash
 # Update system first
@@ -323,6 +367,8 @@ sudo apt install -y mpv vlc ffmpeg python3-pip python3-gpiod python3-evdev
 - `python3-evdev` - Touchscreen input handling
 
 See **Step 5** in the complete setup guide below for detailed installation instructions.
+
+_TL;DR for the impatient ones who scrolled down here first: copy that command, run it, and pretend you read everything. We won't tell. 🤫_
 
 ---
 
@@ -370,9 +416,33 @@ python3 -c "import evdev; print('evdev installed')"
 
 **Note:** If you plan to use only MPV (recommended), you can skip installing VLC. If you plan to use VLC instead, you'll need to modify the systemd service to use `player-vlc.py` instead of `player.py`. If you use VLC you'll also need to do the work to change the touch.py to use VLC instead of MPV.
 
-### Step 6: Transfer Project Files using FileZilla
+_Congratulations! You just installed things! 🎉 I know, I know, hold your applause. But seriously, these boring terminal commands are the foundation of your soon-to-be-awesome tiny TV. Stay strong, warrior._
 
-**6.1 Install and configure FileZilla**
+### Step 6: Transfer Project Files
+
+**Video files:**
+
+- Transfer all your encoded video files from `videos/encoded/` to `/home/pi/simpsonstv/videos/encoded/`
+
+> **Note:** Make sure your videos are properly encoded and renamed before transferring. See the [Video Encoding](#video-encoding) and [File Renaming](#file-renaming) sections if you need to prepare your video files first.
+
+**6.1 Make scripts executable**
+
+In your SSH session, make the shell script executable:
+
+```bash
+chmod +x /home/pi/simpsonstv/start.sh
+```
+
+_Ah yes, chmod +x. The ancient ritual of making files "executable." It's like knighting a file. "I dub thee... executable!" ⚔️ Your script can now run free and wild._
+
+---
+
+You have two options for transferring your video files to the Raspberry Pi: **FileZilla (slower but simpler)** or **USB Drive (faster)**. Choose the method that works best for you.
+
+#### Option A: Transfer Files using FileZilla (Slower)
+
+**6.2 Install and configure FileZilla**
 
 ![Using FileZilla to copy files](simpson-tv/Using%20FileZilla%20to%20copy%20files.png)
 
@@ -387,7 +457,7 @@ Configure the connection:
 
 Click "Quickconnect"
 
-**6.2 Create the project directory**
+**6.3 Create the project directory**
 
 In your SSH session, create the directory:
 
@@ -395,7 +465,7 @@ In your SSH session, create the directory:
 mkdir -p /home/pi/simpsonstv/videos/encoded
 ```
 
-**6.3 Transfer files via FileZilla**
+**6.4 Transfer files via FileZilla**
 
 Using FileZilla, navigate to the remote directory `/home/pi/simpsonstv/` and transfer the following files from your local repository:
 
@@ -413,17 +483,76 @@ Using FileZilla, navigate to the remote directory `/home/pi/simpsonstv/` and tra
 - `tvplayer.service`
 - `tvtouch.service`
 
-**Video files:**
+---
 
-- Transfer all your encoded video files from `videos/encoded/` to `/home/pi/simpsonstv/videos/encoded/`
+#### Option B: Transfer Video Files using USB Drive (Faster)
 
-**6.4 Make scripts executable**
+If you have a large number of video files, using a USB drive is significantly faster than FileZilla. You'll still need to transfer the Python scripts and service files using FileZilla (Option A, steps 6.1-6.3), but you can use a USB drive for the video files.
 
-In your SSH session, make the shell script executable:
+**6.5 Prepare the USB drive on your computer**
+
+1. Copy all your encoded video files from `videos/encoded/` to a USB drive
+2. Safely eject the USB drive from your computer
+
+> **Note:** Make sure your videos are properly encoded and renamed before copying to the USB drive. See the [Video Encoding](#video-encoding) and [File Renaming](#file-renaming) sections if you need to prepare your video files first.
+
+**6.6 Connect USB drive to Raspberry Pi**
+
+1. Plug the USB drive into the micro USB to Type A adapter (mentioned in the [Hardware Used](#hardware-used) section)
+2. Connect the adapter to the Raspberry Pi's micro USB port
+
+**6.7 Mount the USB drive on the Pi**
+
+In your SSH session, run the following commands:
+
+1. Create a mount point for the USB drive:
+
+   ```bash
+   sudo mkdir -p /mnt/usb
+   ```
+
+2. Find your USB drive (it's usually `sda1`):
+
+   ```bash
+   sudo fdisk -l
+   ```
+
+   Look for a device like `/dev/sda1` - this is typically your USB drive.
+
+3. Mount the USB drive:
+
+   ```bash
+   sudo mount /dev/sda1 /mnt/usb
+   ```
+
+4. Verify the files are accessible:
+   ```bash
+   ls /mnt/usb
+   ```
+
+**6.8 Copy video files to the Pi**
+
+Copy all video files from the USB drive to the Pi's videos directory:
 
 ```bash
-chmod +x /home/pi/simpsonstv/start.sh
+cp /mnt/usb/*.mp4 /home/pi/simpsonstv/videos/encoded/
 ```
+
+**6.9 Unmount the USB drive**
+
+Once the copy is complete:
+
+```bash
+sudo umount /mnt/usb
+```
+
+Now you can safely remove the USB drive from the Raspberry Pi.
+
+_USB transfer: because watching FileZilla crawl through 100 video files at 2MB/s is about as fun as watching grass grow. With USB, you'll be done before you can even finish your coffee! ☕ Just plug it in, copy, unplug. Boom. Done. Like a technological ninja. 🥷_
+
+---
+
+**Whichever method you choose, continue to Step 7 below.**
 
 ### Step 7: Install and Configure Systemd Services
 
@@ -469,6 +598,8 @@ sudo systemctl status tvtouch.service
 
 Press `q` to exit the status view.
 
+_If all three services show green "active (running)" status, you're basically a Linux sysadmin now. Add it to your resume. If they're red and angry... well, welcome to the troubleshooting section below! 😅_
+
 ### Step 8: Service Management Commands
 
 **To stop a service:**
@@ -512,6 +643,8 @@ sudo systemctl start tvbuttons.service tvplayer.service tvtouch.service
 ```bash
 sudo systemctl restart tvbuttons.service tvplayer.service tvtouch.service
 ```
+
+_Did something break? Try the classic "turn it off and back on again" approach. They've done studies, you know. 60% of the time, it works every time. Those are pretty good odds if you ask me!_
 
 ### Troubleshooting
 
@@ -613,6 +746,8 @@ If you need to encode new videos to the correct format for the Raspberry Pi, use
 
 **Note:** Encoding is CPU-intensive and may be slow on the Raspberry Pi. Consider encoding videos on a more powerful computer before transferring them to the Pi.
 
+_Fair warning: Encoding videos on a Pi Zero 2W is like watching paint dry... in slow motion... on a Tuesday. Seriously, do yourself a favor and encode on your main computer first. Your sanity will thank you. This is the perfect time for a bathroom break, a snack, a nap, or perhaps reorganizing your sock drawer. Come back in... well, a while. A long while. Maybe bring a book. 📚_
+
 ### File Renaming
 
 Use the `renamefiles.py` script in `videos/encoded/` to standardize video filenames to the format `The.Simpsons.S##E##.mp4` (with zero-padded season and episode numbers).
@@ -629,3 +764,11 @@ Use the `renamefiles.py` script in `videos/encoded/` to standardize video filena
    ```
 
 This ensures proper alphabetical sorting and sequential playback of episodes.
+
+_Because `S1E1` coming after `S12E12` in alphabetical order is the kind of chaos we simply cannot tolerate in a civilized society. We're building a tiny TV here, people! Standards matter! The script will clean up those filenames faster than you can say "D'oh!" Now go forth and enjoy your properly sorted Simpsons episodes, you magnificent nerd. You did it! 🎊_
+
+---
+
+**You've made it to the end!** If everything works, you now have a fully functional miniature Simpsons TV. If it doesn't... well, there's always the troubleshooting section above. And coffee. Lots of coffee. ☕
+
+Happy binge-watching on your ridiculously tiny TV! 📺✨
