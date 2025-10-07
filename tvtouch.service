@@ -1,5 +1,5 @@
 [Unit]
-Description=tvtouch
+Description=Simpson TV Player Touchscreen
 After=network.target
 
 [Service]

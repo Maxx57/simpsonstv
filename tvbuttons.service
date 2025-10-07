@@ -1,5 +1,5 @@
 [Unit]
-Description=tvbuttons
+Description=Simpson TV Player Buttons
 After=network.target
 
 [Service]
