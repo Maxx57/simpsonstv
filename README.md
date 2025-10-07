@@ -1,6 +1,12 @@
+# Simpsons TV - Raspberry Pi Zero 2W Build
+
 I made some changes to Brandon Withrow's [Waveshare-version TV build](https://withrow.io/simpsons-tv-build-guide-waveshare). That include the changes (https://github.com/jeremywhelchel/simpsonstv) made to use MPV as the video player and added touch controls. The below gif is his and some of his text changes in the readme. I further added a VLC version of the player, as well as updated the encode.py to remove the black bars on the side of the videos if they are there.
 I also added a rename files, in case you have extra information after the season and episode in the file names.
-In the player.py I also updated the play order to respect the seasons and episodes in case there was some weird ordering based on the soemthing like S1E1 and S12E12 in file ordering. Mine rename them all the add a zero (0) for single digit season and episode so this S1E1 becomes S01E01, etc.
+In the player.py I also updated the play order to respect the seasons and episodes in case there was some weird ordering based on files named something like `The.Simpsons.S1E1.some.extra.info.mp4` and `The.Simpsons.S12E12.some.extra.info.mp4` in file ordering. Mine rename them all the add a zero (0) for single digit season and episode so this `S1E1` becomes `S01E01` and removes all the extra info to the right of the season and episode, etc.
+
+---
+
+## Hardware Used
 
 I'm also using this Raspberry Pi Zero 2W hardware:
 (https://www.amazon.com/dp/B0DKKXS4RV?ref=ppx_yo2ov_dt_b_fed_asin_title)
@@ -47,6 +53,52 @@ The videos are all located at the following directory on the Raspberry Pi
 ```
 '/home/admin/simpsonstv/videos'
 ```
+
+## Video Player Options
+
+This project includes two video player options:
+
+**Option 1: MPV (Recommended - Default)**
+
+- File: `player.py`
+- **Fully compatible with touch controls** via socket interface
+- Better performance on Raspberry Pi Zero 2W
+- Automatic playlist looping
+- On-screen display for current episode
+- Touch controls work: play/pause, seek, next/previous episode
+
+**Option 2: VLC (Alternative)**
+
+- File: `player-vlc.py`
+- Alternative if you prefer VLC
+- Better aspect ratio handling for some video files
+- Automatic cropping to 16:9
+- **Note:** Touch controls may not work with VLC
+
+**To switch between players:**
+
+Edit the `tvplayer.service` file and change the `ExecStart` line:
+
+For MPV (default):
+
+```
+ExecStart=/usr/bin/python3 /home/admin/simpsonstv/player.py
+```
+
+For VLC:
+
+```
+ExecStart=/usr/bin/python3 /home/admin/simpsonstv/player-vlc.py
+```
+
+Then reload and restart the service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart tvplayer.service
+```
+
+**Recommendation:** Use MPV (`player.py`) for full touch control functionality.
 
 ## Hardware changes
 
@@ -250,26 +302,73 @@ sudo raspi-config
 
 Wait for the Pi to reboot (about 30-60 seconds), then reconnect via SSH.
 
-### Step 5: Install Required Software
+## Quick Reference: Required Software Installation
+
+After flashing your SD card and completing initial setup with `raspi-config`, you'll need to install the following packages. **This must be done via SSH or directly on the Pi** (SSH is much easier!). The same step by step process is outlined below this, I just added this section for a full list of libraries needed for quick reference :
+
+```bash
+# Update system first
+sudo apt update && sudo apt upgrade -y
+
+# Install all required packages (one command)
+sudo apt install -y mpv vlc ffmpeg python3-pip python3-gpiod python3-evdev
+```
+
+**What these packages do:**
+
+- `mpv` - Video player for playback
+- `vlc` - Alternative video player option
+- `ffmpeg` - Video encoding/conversion tool
+- `python3-gpiod` - GPIO control for buttons and backlight
+- `python3-evdev` - Touchscreen input handling
+
+See **Step 5** in the complete setup guide below for detailed installation instructions.
+
+---
+
+### Step 5: Install Required Software and Python Libraries
+
+**IMPORTANT:** This step installs all the necessary system packages and Python libraries needed to run the Simpsons TV project. You must complete this step after connecting to your Pi via SSH (using mRemoteNG or another SSH client). While you can also run these commands directly on the Pi with an attached keyboard, using SSH is much easier! **Do not skip this step** - the scripts will not work without these libraries.
 
 **5.1 Update the system**
+
+First, update the package list and upgrade existing packages:
 
 ```bash
 sudo apt update
 sudo apt upgrade -y
 ```
 
-**5.2 Install MPV video player**
+**5.2 Install required system packages**
+
+Install all required system packages in one command:
 
 ```bash
-sudo apt install mpv -y
+sudo apt install -y mpv vlc ffmpeg python3-pip python3-gpiod python3-evdev
 ```
 
-**5.3 Install Python dependencies**
+**What each package does:**
+
+- **mpv**: Primary video player (used by `player.py`)
+- **vlc**: Alternative video player (used by `player-vlc.py`)
+- **ffmpeg**: Video encoding tool (used by `encode.py`)
+- **python3-pip**: Python package installer
+- **python3-gpiod**: GPIO control library (used by `buttons.py` for button and backlight control)
+- **python3-evdev**: Event device library (used by `touch.py` for touchscreen input)
+
+**5.3 Verify installations**
+
+You can verify the installations were successful:
 
 ```bash
-sudo apt install python3-pip python3-evdev -y
+mpv --version
+vlc --version
+ffmpeg -version
+python3 -c "import gpiod; print('gpiod installed')"
+python3 -c "import evdev; print('evdev installed')"
 ```
+
+**Note:** If you plan to use only MPV (recommended), you can skip installing VLC. If you plan to use VLC instead, you'll need to modify the systemd service to use `player-vlc.py` instead of `player.py`. If you use VLC you'll also need to do the work to change the touch.py to use VLC instead of MPV.
 
 ### Step 6: Transfer Project Files using FileZilla
 
@@ -416,6 +515,27 @@ sudo systemctl restart tvbuttons.service tvplayer.service tvtouch.service
 
 ### Troubleshooting
 
+**Missing Python library errors:**
+
+If you see errors like `ModuleNotFoundError: No module named 'gpiod'` or `ModuleNotFoundError: No module named 'evdev'`:
+
+- Make sure you completed **Step 5** and installed all required packages
+- Verify installations:
+  ```bash
+  python3 -c "import gpiod; print('gpiod OK')"
+  python3 -c "import evdev; print('evdev OK')"
+  ```
+- If still missing, reinstall the specific package:
+  ```bash
+  sudo apt install -y python3-gpiod python3-evdev
+  ```
+
+**Button controls not working:**
+
+- Verify `tvbuttons.service` is running: `sudo systemctl status tvbuttons.service`
+- Check for gpiod library errors in logs: `sudo journalctl -u tvbuttons.service -n 50`
+- Ensure python3-gpiod is installed (see above)
+
 **Screen not displaying correctly:**
 
 - Verify the `config.txt` file was copied correctly to the boot partition
@@ -431,19 +551,39 @@ sudo systemctl restart tvbuttons.service tvplayer.service tvtouch.service
 **Touch screen not responding:**
 
 - Check that `tvtouch.service` is running: `sudo systemctl status tvtouch.service`
-- Verify the Python evdev library is installed: `pip3 list | grep evdev`
+- Verify the Python evdev library is installed: `python3 -c "import evdev"`
+- Check for permission errors in logs: `sudo journalctl -u tvtouch.service -n 50`
+- Ensure user is in the `input` group: `sudo usermod -a -G input pi` (then reboot)
 
 **Videos not playing:**
 
 - Check that MPV is installed: `mpv --version`
 - Verify video files exist in `/home/pi/simpsonstv/videos/encoded/`
 - Check `tvplayer.service` logs: `sudo journalctl -u tvplayer.service -n 50`
+- Ensure video files are in MP4 format
+
+**MPV or VLC not found:**
+
+- Install the missing player:
+  ```bash
+  sudo apt install -y mpv vlc
+  ```
+- Verify installation: `mpv --version` or `vlc --version`
 
 **Services not starting:**
 
 - Check for errors: `sudo systemctl status [service-name]`
 - View detailed logs: `sudo journalctl -u [service-name] -n 50`
 - Verify file permissions and paths in the service files
+- Ensure all required libraries are installed (see **Step 5**)
+
+**Python script errors:**
+
+Common errors and solutions:
+
+- `ModuleNotFoundError`: Missing Python library - install required packages from **Step 5**
+- `FileNotFoundError: /tmp/mpvsocket`: MPV player not running or not started with socket support
+- `Permission denied /dev/input/event0`: User not in input group - run `sudo usermod -a -G input pi` and reboot
 
 ---
 
@@ -451,8 +591,41 @@ sudo systemctl restart tvbuttons.service tvplayer.service tvtouch.service
 
 ### Video Encoding
 
-If you need to encode new videos, use the `encode.py` script in the `videos/` directory. See the script for usage details.
+If you need to encode new videos to the correct format for the Raspberry Pi, use the `encode.py` script in the `videos/` directory.
+
+**Requirements:**
+
+- `ffmpeg` must be installed (included in **Step 5**)
+
+**How to use:**
+
+1. Place your source video files in the `videos/` directory (supports .mp4, .mkv, .mov, .avi formats)
+2. Run the encoding script:
+   ```bash
+   cd /home/pi/simpsonstv/videos
+   python3 encode.py
+   ```
+3. Encoded videos will be saved to `videos/encoded/` with optimized settings:
+   - Resolution: 480p height (appropriate for the 2.8" screen)
+   - Cropping: Removes black bars from sides (240px removed)
+   - Video codec: H.264 baseline profile (compatible with Raspberry Pi)
+   - Audio: AAC stereo at 128kbps
+
+**Note:** Encoding is CPU-intensive and may be slow on the Raspberry Pi. Consider encoding videos on a more powerful computer before transferring them to the Pi.
 
 ### File Renaming
 
-Use the `renamefiles.py` script in `videos/encoded/` to standardize video filenames to the format `The.Simpsons.S##E##.mp4`.
+Use the `renamefiles.py` script in `videos/encoded/` to standardize video filenames to the format `The.Simpsons.S##E##.mp4` (with zero-padded season and episode numbers).
+
+**How to use:**
+
+1. Navigate to the encoded videos directory:
+   ```bash
+   cd /home/pi/simpsonstv/videos/encoded
+   ```
+2. Run the rename script:
+   ```bash
+   python3 renamefiles.py
+   ```
+
+This ensures proper alphabetical sorting and sequential playback of episodes.
