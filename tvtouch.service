@@ -5,7 +5,7 @@ After=network.target
 [Service]
 WorkingDirectory=/home/admin/simpsonstv/
 User=admin
-ExecStart=/usr/bin/python3 /home/admin/simpsonstv/touch.py
+ExecStart=/usr/bin/python3 /home/admin/simpsonstv/touch-vlc.py
 Restart=always
 
 [Install]

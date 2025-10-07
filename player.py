@@ -54,6 +54,7 @@ def playVideos():
         '--osd-on-seek=msg-bar',
         '--loop-playlist=inf',  # Loop the entire playlist
         '--no-terminal',  # Don't clutter terminal output
+        '--ao=alsa',  # Use ALSA audio output to avoid PipeWire issues
     ] + videos
     
     playProcess = Popen(mpv_command)
