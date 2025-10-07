@@ -43,20 +43,19 @@ def playVideos():
     # Don't shuffle - play in order
     # random.shuffle(videos)
     
-    # MPV command with socket interface for touch controls
-    mpv_command = [
-        'mpv',
-        '--input-ipc-server=/tmp/mpvsocket',  # Enable socket for touch.py
+    # VLC command with automatic crop detection and stretch
+    vlc_command = [
+        'cvlc',  # Console VLC
         '--fullscreen',
-        '--osd-duration=5000',
-        '--osd-font-size=80',
-        '--osd-playing-msg=${filename/no-ext}',
-        '--osd-on-seek=msg-bar',
-        '--loop-playlist=inf',  # Loop the entire playlist
-        '--no-terminal',  # Don't clutter terminal output
+        '--no-osd',
+        '--loop',
+        '--no-video-title-show',
+        '--aspect-ratio=16:9',  # Force aspect ratio to match your screen
+        '--crop=16:9',  # Crop to 16:9 (removes black bars)
+        '--autoscale',  # Auto-scale to fill screen
     ] + videos
     
-    playProcess = Popen(mpv_command)
+    playProcess = Popen(vlc_command)
     playProcess.wait()
 
 
