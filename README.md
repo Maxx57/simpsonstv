@@ -48,15 +48,15 @@ And this waveshare display:
 (https://www.amazon.com/dp/B08LZG5G19?ref=ppx_yo2ov_dt_b_fed_asin_title)
 
 And I got these micro usb to type A converters to connect a keyboard to the Pi and manually run the player and touch files using these commands:
-`python3 /home/admin/simpsonstv/player.py`
+`python3 /home/pi/simpsonstv/player.py`
 
-`python3 /home/admin/simpsonstv/touch.py`
+`python3 /home/pi/simpsonstv/touch.py`
 
 (https://www.amazon.com/dp/B0BX9FSCFH?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1)
 
 ![Unidirectional Micro USB Male to US.png](simpson-tv/Unidirectional%20Micro%20USB%20Male%20to%20US.png)
 
-Wherever you see `admin` in the commands, replace that with your username since that's the user you will be using. By default yours will be `pi`, I highly recommend that you change that and the password during the setup process of the flashing of the SSD - I had trouble connecting to the pi using SSH if I used the raspberry OS imager program using the system tools, so I just did the default flash of the ssd card not using the imager system tools (I chose NO) and then did all the setup on the pi using my keyboard connected directly to the pi and a magnifying glass - ;) so I could see what I was typing on that tiny display.
+Wherever you see `pi` in the commands, replace that with your username since that's the user you will be using unless you changed it. By default yours will be `pi`, I highly recommend that you change at least the password during the setup process of the flashing of the SSD - I had trouble connecting to the pi using SSH if I used the raspberry OS imager program using the system tools, so I just did the default flash of the ssd card not using the imager system tools (I chose NO) and then did all the setup on the pi using my keyboard connected directly to the pi and a magnifying glass - ;) so I could see what I was typing on that tiny display.
 
 _Pro tip: If you squint really hard at that 2.8" screen while typing, you'll develop either eagle-eye vision or a splitting headache. Possibly both. That's why we're using SSH for most of this. You're welcome._
 
@@ -86,7 +86,7 @@ You can:
 The videos are all located at the following directory on the Raspberry Pi
 
 ```
-'/home/admin/simpsonstv/videos'
+'/home/pi/simpsonstv/videos'
 ```
 
 ## Video Player Options
@@ -117,13 +117,13 @@ Edit the `tvplayer.service` file and change the `ExecStart` line:
 For MPV (default):
 
 ```
-ExecStart=/usr/bin/python3 /home/admin/simpsonstv/player.py
+ExecStart=/usr/bin/python3 /home/pi/simpsonstv/player.py
 ```
 
 For VLC:
 
 ```
-ExecStart=/usr/bin/python3 /home/admin/simpsonstv/player-vlc.py
+ExecStart=/usr/bin/python3 /home/pi/simpsonstv/player-vlc.py
 ```
 
 Then reload and restart the service:
@@ -214,7 +214,11 @@ After the OS is flashed, the SD card will be ejected and remounted. You should s
 Navigate to the `boot/overlays` folder on your SD card and copy the Waveshare DPI LCD overlay files from the `simpsons-tv/boot/overlays` folder in this repository:
 
 ```
-boot/overlays/waveshare28dpi-overlay.dtb
+boot/overlays/vc4-kms-dpi-2inch8.dtbo
+boot/overlays/waveshare-28dpi-3b.dtbo
+boot/overlays/waveshare-28dpi-3b-4b.dtbo
+boot/overlays/waveshare-28dpi-4b.dtbo
+boot/overlays/waveshare-touch-28dpi.dtbo
 ```
 
 **2.2 Copy or replace the `config.txt` file**
